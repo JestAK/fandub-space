@@ -30,7 +30,6 @@ const updatePost = async (req, res) => {
     }
 };
 
-// Видалення поста (DELETE) [cite: 158, 159]
 const deletePost = async (req, res) => {
     try {
         const { id } = req.params;
