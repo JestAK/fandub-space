@@ -40,7 +40,7 @@ app.get('/auth/google/callback',
     userController.googleAuthCallback
 );
 
-app.post('/posts', authMiddleware, postController.createPost);
+app.post('/posts', authMiddleware, postController.createUserPost);
 app.get('/posts', postController.getApprovedUserPosts);
 app.put('/posts/:id', authMiddleware, postController.updateUserPost);
 app.delete('/posts/:id', authMiddleware, postController.deleteUserPost);
