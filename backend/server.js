@@ -36,13 +36,17 @@ app.post('/profile/change-password', authMiddleware, userController.changeUserPa
 
 app.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
 app.get('/auth/google/callback',
-    passport.authenticate('google', { session: false, failureRedirect: '/login' }),
+    passport.authenticate('google', { session: false, failureRedirect: `${process.env.FRONTEND_URL || 'http://localhost:8080'}/login?error=google_failed` }),
     userController.googleAuthCallback
 );
 
-// app.post('/posts', postController.createPost);
-// app.put('/posts/:id', postController.updatePost);
-// app.delete('/posts/:id', postController.deletePost);
+app.post('/posts', authMiddleware, postController.createPost);
+app.get('/posts', postController.getApprovedUserPosts);
+app.put('/posts/:id', authMiddleware, postController.updateUserPost);
+app.delete('/posts/:id', authMiddleware, postController.deleteUserPost);
+
+app.get('/admin/posts/pending', authMiddleware, postController.getPendingUserPosts);
+app.put('/admin/posts/:id/moderate', authMiddleware, postController.moderateUserPost);
 
 app.listen(port, () => {
     console.log(`App listening on port ${port}`)
