@@ -1,3 +1,5 @@
+const dotenv = require('dotenv');
+dotenv.config();
 const sequelize = require("../config/database");
 const {DataTypes} = require("sequelize");
 const User = require("./User");
