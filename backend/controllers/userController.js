@@ -265,25 +265,31 @@ const changeUserPassword = async (req, res) => {
 
 const googleAuthCallback = async (req, res) => {
     try {
-        const user = req.user;
+        if (!req.user) {
+            return res.redirect(`${process.env.FRONTEND_URL}/login?error=auth_failed`);
+        }
 
-        const token = jwt.sign({ id: user.id, email: user.email, isAdmin: user.isAdmin }, ACCESS_SECRET, { expiresIn: '1h' });
+        const accessToken = jwt.sign(
+            { id: req.user.id, email: req.user.email, isAdmin: req.user.isAdmin },
+            ACCESS_SECRET,
+            { expiresIn: '15m' }
+        );
 
-        const refreshToken = jwt.sign({ id: user.id }, REFRESH_SECRET, { expiresIn: '7d' });
-
-        const expiryDate = new Date();
-        expiryDate.setDate(expiryDate.getDate() + 7);
+        const refreshTokenValue = jwt.sign(
+            { id: req.user.id },
+            REFRESH_SECRET,
+            { expiresIn: '7d' }
+        );
 
         await RefreshToken.create({
-            token: refreshToken,
-            expiresAt: expiryDate,
-            UserId: user.id
+            token: refreshTokenValue,
+            UserId: req.user.id,
+            expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
         });
 
-        res.json({ token, refreshToken });
+        res.redirect(`${process.env.FRONTEND_URL}/login?token=${accessToken}&refreshToken=${refreshTokenValue}`);
     } catch (error) {
-        console.error("Google Auth Error:", error);
-        res.status(500).json({ error: error.message });
+        res.redirect(`${process.env.FRONTEND_URL}/login?error=${encodeURIComponent(error.message)}`);
     }
 };
 

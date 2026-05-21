@@ -1,6 +1,7 @@
 const express = require('express')
 const dotenv = require('dotenv');
 dotenv.config();
+const cors = require('cors');
 const sequelize = require('./config/database');
 const userController = require('./controllers/userController');
 const postController = require('./controllers/postController');
@@ -12,6 +13,20 @@ const port = 3000
 
 app.use(express.json());
 app.use(passport.initialize());
+const allowedOrigins = ['http://localhost:8080', 'https://fandub-space-1.onrender.com'];
+
+app.use(cors({
+    origin: function (origin, callback) {
+        if (!origin) return callback(null, true);
+
+        if (allowedOrigins.indexOf(origin) !== -1) {
+            callback(null, true);
+        } else {
+            callback(new Error('Blocked by CORS'));
+        }
+    },
+    credentials: true
+}));
 
 const loginLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
