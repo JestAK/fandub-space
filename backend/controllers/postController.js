@@ -167,7 +167,7 @@ const updatePostStatus = async (postId, newStatus) => {
     if (!post) {
         throw new Error('Post not found');
     }
-    await post.update({ newStatus });
+    await post.update({ status: newStatus });
     return post;
 }
 
