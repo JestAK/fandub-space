@@ -14,30 +14,8 @@ const registerUser = async (req, res) => {
     try {
         const { email, password, confirmedPassword, name, role } = req.body;
 
-        if (!email || !password || !confirmedPassword || !name || !role) {
-            return res.status(400).json({ error: 'Fill necessary data' });
-        }
-
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
-            return res.status(400).json({
-                error: 'Invalid email format. Please enter a valid address (e.g., user@example.com)'
-            });
-        }
-
-        if (password.length < 6) {
-            return res.status(400).json({ error: 'Password must be at least 6 characters long' });
-        }
-
         if (password !== confirmedPassword) {
             return res.status(400).json({ error: 'Passwords do not match' });
-        }
-
-        const allowedRoles = ['actor', 'translator', 'sound'];
-        if (!allowedRoles.includes(role)) {
-            return res.status(400).json({
-                error: `Invalid role. Allowed roles are: ${allowedRoles.join(', ')}`
-            });
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
@@ -58,10 +36,6 @@ const registerUser = async (req, res) => {
 const loginUser = async (req, res) => {
     try {
         const { email, password } = req.body;
-
-        if (!email || !password) {
-            return res.status(400).json({ error: 'Email and password are required' });
-        }
 
         const user = await User.findOne({ where: { email } });
         if (!user) {
@@ -119,10 +93,6 @@ const refreshToken = async (req, res) => {
     try {
         const { refreshToken } = req.body;
 
-        if (!refreshToken) {
-            return res.status(400).json({ error: 'Refresh token is required' });
-        }
-
         const storedToken = await RefreshToken.findOne({ where: { token: refreshToken } });
         if (!storedToken) {
             return res.status(401).json({ error: 'Invalid refresh token' });
@@ -153,10 +123,6 @@ const logoutUser = async (req, res) => {
     try {
         const { refreshToken } = req.body;
 
-        if (!refreshToken) {
-            return res.status(400).json({ error: 'Refresh token is required' });
-        }
-
         await RefreshToken.destroy({ where: { token: refreshToken } });
         res.json({ message: 'Logged out successfully' });
     } catch (error) {
@@ -177,12 +143,6 @@ const updateUserProfile = async (req, res) => {
         }
 
         if (role) {
-            const allowedRoles = ['actor', 'translator', 'sound'];
-            if (!allowedRoles.includes(role)) {
-                return res.status(400).json({
-                    error: `Invalid role. Allowed roles are: ${allowedRoles.join(', ')}`
-                });
-            }
             fieldsToUpdate.role = role;
         }
 
@@ -228,14 +188,6 @@ const changeUserPassword = async (req, res) => {
     try {
         const userId = req.user.id;
         const { oldPassword, newPassword, confirmedNewPassword } = req.body;
-
-        if (!oldPassword || !newPassword || !confirmedNewPassword) {
-            return res.status(400).json({ error: 'Please fill in all password fields' });
-        }
-
-        if (newPassword.length < 6) {
-            return res.status(400).json({ error: 'New password must be at least 6 characters long' });
-        }
 
         if (newPassword !== confirmedNewPassword) {
             return res.status(400).json({ error: 'New passwords do not match' });

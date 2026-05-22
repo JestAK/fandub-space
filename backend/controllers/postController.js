@@ -6,10 +6,6 @@ const createUserPost = async (req, res) => {
         const { title, content } = req.body;
         const userId = req.user.id;
 
-        if (!title || !content) {
-            return res.status(400).json({ error: 'Title and content are required' });
-        }
-
         const post = await createPost({ title, content, userId });
 
         res.status(201).json({
