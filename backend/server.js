@@ -2,17 +2,22 @@ const express = require('express')
 const dotenv = require('dotenv');
 dotenv.config();
 const cors = require('cors');
+const morgan = require('morgan');
+const upload = require('./config/multer');
 const sequelize = require('./config/database');
 const userController = require('./controllers/userController');
 const postController = require('./controllers/postController');
+const systemController = require('./controllers/systemController');
 const rateLimit = require("express-rate-limit");
-const {authMiddleware} = require("./middlewares");
+const { authMiddleware, responseTimeMiddleware, errorHandlerMiddleware } = require("./middlewares");
 const passport = require('./config/passport');
 const app = express()
 const port = 3000
 
 app.use(express.json());
 app.use(passport.initialize());
+app.use(morgan('dev'));
+app.use(responseTimeMiddleware);
 const allowedOrigins = ['http://localhost:8080', 'https://fandub-space-1.onrender.com'];
 
 app.use(cors({
@@ -62,6 +67,12 @@ app.delete('/posts/:id', authMiddleware, postController.deleteUserPost);
 
 app.get('/admin/posts/pending', authMiddleware, postController.getPendingUserPosts);
 app.put('/admin/posts/:id/moderate', authMiddleware, postController.moderateUserPost);
+
+app.get('/status', systemController.getStatus);
+app.post('/upload', upload.single('file'), systemController.uploadSingleFile);
+app.post('/upload-multiple', upload.array('files', 5), systemController.uploadMultipleFiles);
+
+app.use(errorHandlerMiddleware);
 
 app.listen(port, () => {
     console.log(`App listening on port ${port}`)

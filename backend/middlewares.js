@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const logger = require('./config/logger');
 const ACCESS_SECRET = process.env.JWT_SECRET;
 
 const authMiddleware = (req, res, next) => {
@@ -20,11 +21,24 @@ const authMiddleware = (req, res, next) => {
     }
 };
 
-const adminMiddleware = (req, res, next) => {
-    if (!req.user || !req.user.isAdmin) {
-        return res.status(403).json({ error: 'Forbidden. Admin privileges required.' });
-    }
+const responseTimeMiddleware = (req, res, next) => {
+    const start = process.hrtime();
+    res.on('finish', () => {
+        const diff = process.hrtime(start);
+        const timeInMs = (diff[0] * 1e3 + diff[1] * 1e-6).toFixed(3);
+        logger.info(`${req.method} ${req.originalUrl} - ${res.statusCode} - ${timeInMs}ms`);
+    });
     next();
 };
 
-module.exports = { authMiddleware, adminMiddleware };
+const errorHandlerMiddleware = (err, req, res, next) => {
+    logger.error(`${req.method} ${req.originalUrl} - Error: ${err.message}`);
+
+    if (err instanceof require('multer').MulterError) {
+        return res.status(400).json({ error: `Upload error: ${err.message}` });
+    }
+
+    res.status(500).json({ error: err.message || 'Internal Server Error' });
+};
+
+module.exports = { authMiddleware, responseTimeMiddleware, errorHandlerMiddleware };
