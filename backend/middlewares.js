@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const NodeCache = require('node-cache');
 const logger = require('./config/logger');
 const ACCESS_SECRET = process.env.JWT_SECRET;
 
@@ -41,4 +42,23 @@ const errorHandlerMiddleware = (err, req, res, next) => {
     res.status(500).json({ error: err.message || 'Internal Server Error' });
 };
 
-module.exports = { authMiddleware, responseTimeMiddleware, errorHandlerMiddleware };
+
+const localCache = new NodeCache({ stdTTL: 60 });
+const cacheMiddleware = (req, res, next) => {
+    const key = req.originalUrl;
+    const cachedData = localCache.get(key);
+
+    if (cachedData) {
+        return res.json(JSON.parse(cachedData));
+    }
+
+    res.sendResponse = res.json;
+    res.json = (body) => {
+        localCache.set(key, JSON.stringify(body));
+        res.sendResponse(body);
+    };
+
+    next();
+};
+
+module.exports = { authMiddleware, responseTimeMiddleware, errorHandlerMiddleware, cacheMiddleware };
